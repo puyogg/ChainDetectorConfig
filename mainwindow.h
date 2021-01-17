@@ -13,6 +13,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <json/json.h>
+#include <array>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,6 +29,22 @@ public:
 
 private slots:
     void on_startPreview_clicked();
+
+    void on_gameField_x_valueChanged(int arg1);
+    void on_gameField_y_valueChanged(int arg1);
+    void on_gameField_width_valueChanged(int arg1);
+    void on_gameField_height_valueChanged(int arg1);
+    void on_nextWindow_x_valueChanged(int arg1);
+    void on_nextWindow_y_valueChanged(int arg1);
+    void on_nextWindow_width_valueChanged(int arg1);
+    void on_nextWindow_height_valueChanged(int arg1);
+    void on_score_x_valueChanged(int arg1);
+    void on_score_y_valueChanged(int arg1);
+    void on_score_width_valueChanged(int arg1);
+    void on_score_height_valueChanged(int arg1);
+
+
+    void on_currentPlayer_currentIndexChanged(int index);
 
 private:
     Ui::MainWindow *ui;
@@ -49,9 +66,12 @@ private:
         int score_width;
         int score_height;
     };
-    PlayerData p1;
-    PlayerData p2;
+    std::array<PlayerData, 2> player;
+
+    int currentPlayer;
 
     void drawBoundingBoxes(cv::Mat &frame);
+    void setDataToFields(int p);
+    void saveFieldsToData();
 };
 #endif // MAINWINDOW_H

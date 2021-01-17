@@ -15,6 +15,13 @@ MainWindow::MainWindow(QWidget *parent)
     ui->gameField_y->setValue(100);
     ui->gameField_width->setValue(200);
     ui->gameField_height->setValue(200);
+
+    // Set some default data
+    currentPlayer = 0;
+    player.at(0) = { 0, 0, 100, 100, 200, 200, 100, 100, 100, 400, 100, 100 };
+    player.at(1) = { 500, 222, 100, 100, 700, 200, 100, 100, 500, 400, 100, 100 };
+
+    setDataToFields(1);
 }
 
 MainWindow::~MainWindow()
@@ -22,9 +29,21 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-//void drawPlayerBBs(cv::Mat &frame) {
-//    cv::rectangle(frame, cv::Rect(ui->gameField_x))
-//}
+void MainWindow::setDataToFields(int p) {
+    ui->gameField_x->setValue(player.at(p).gameField_x);
+    ui->gameField_y->setValue(player.at(p).gameField_y);
+    ui->gameField_width->setValue(player.at(p).gameField_width);
+    ui->gameField_height->setValue(player.at(p).gameField_height);
+    ui->nextWindow_x->setValue(player.at(p).nextWindow_x);
+    ui->nextWindow_y->setValue(player.at(p).nextWindow_y);
+    ui->nextWindow_width->setValue(player.at(p).nextWindow_width);
+    ui->nextWindow_height->setValue(player.at(p).nextWindow_height);
+    ui->score_x->setValue(player.at(p).score_x);
+    ui->score_y->setValue(player.at(p).score_y);
+    ui->score_width->setValue(player.at(p).score_width);
+    ui->score_height->setValue(player.at(p).score_height);
+    return;
+}
 
 void MainWindow::drawBoundingBoxes(cv::Mat &frame) {
     cv::rectangle(frame,
@@ -89,4 +108,62 @@ void MainWindow::on_startPreview_clicked()
 
     video.release();
     ui->startPreview->setText("Start");
+}
+
+// There's probably a more efficient way to map all these events but
+// I'm too tired to figure it out right now lol.
+void MainWindow::on_gameField_x_valueChanged(int arg1)
+{
+    player.at(currentPlayer).gameField_x = arg1;
+}
+void MainWindow::on_gameField_y_valueChanged(int arg1)
+{
+    player.at(currentPlayer).gameField_y = arg1;
+}
+void MainWindow::on_gameField_width_valueChanged(int arg1)
+{
+    player.at(currentPlayer).gameField_width = arg1;
+}
+void MainWindow::on_gameField_height_valueChanged(int arg1)
+{
+    player.at(currentPlayer).gameField_height = arg1;
+}
+void MainWindow::on_nextWindow_x_valueChanged(int arg1)
+{
+    player.at(currentPlayer).nextWindow_x = arg1;
+}
+void MainWindow::on_nextWindow_y_valueChanged(int arg1)
+{
+    player.at(currentPlayer).nextWindow_y = arg1;
+}
+void MainWindow::on_nextWindow_width_valueChanged(int arg1)
+{
+    player.at(currentPlayer).nextWindow_width = arg1;
+}
+void MainWindow::on_nextWindow_height_valueChanged(int arg1)
+{
+    player.at(currentPlayer).nextWindow_height = arg1;
+}
+void MainWindow::on_score_x_valueChanged(int arg1)
+{
+    player.at(currentPlayer).score_x = arg1;
+}
+void MainWindow::on_score_y_valueChanged(int arg1)
+{
+    player.at(currentPlayer).score_y = arg1;
+}
+void MainWindow::on_score_width_valueChanged(int arg1)
+{
+    player.at(currentPlayer).score_width = arg1;
+}
+void MainWindow::on_score_height_valueChanged(int arg1)
+{
+    player.at(currentPlayer).score_height = arg1;
+}
+
+void MainWindow::on_currentPlayer_currentIndexChanged(int index)
+{
+//    std::cout << "Dropdown box index: " << index << std::endl;
+    currentPlayer = index;
+    setDataToFields(index);
 }
