@@ -13,11 +13,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Get the JsonCpp library
 include(FetchContent)
-#FetchContent_Declare(
-#    jsoncpp
-#    GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp.git
-#    GET_TAG master
-#)
 FetchContent_Declare(
         jsoncpp
         GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp.git
@@ -52,4 +47,9 @@ target_link_libraries(SelectOpenCVSettings
     PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
     PRIVATE ${OpenCV_LIBS}
     PRIVATE jsoncpp_static
+)
+
+# Custom command to copy over detectionsettings.json to build folder
+add_custom_command(TARGET SelectOpenCVSettings POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/detectionsettings.json" "$<TARGET_FILE_DIR:SelectOpenCVSettings>"
 )

@@ -14,6 +14,7 @@
 #include <opencv2/imgproc.hpp>
 #include <json/json.h>
 #include <array>
+#include <fstream>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -46,6 +47,8 @@ private slots:
 
     void on_currentPlayer_currentIndexChanged(int index);
 
+    void on_saveSettings_clicked();
+
 private:
     Ui::MainWindow *ui;
 
@@ -73,5 +76,8 @@ private:
     void drawBoundingBoxes(cv::Mat &frame);
     void setDataToFields(int p);
     void saveFieldsToData();
+
+    void loadSettingsJSON();
+    void saveSettingsJSON();
 };
 #endif // MAINWINDOW_H

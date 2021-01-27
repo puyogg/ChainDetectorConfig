@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 #include <iostream>
+#include <fstream>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -11,17 +13,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->graphicsView->setScene(new QGraphicsScene(this));
     ui->graphicsView->scene()->addItem(&pixmap);
 
-    ui->gameField_x->setValue(100);
-    ui->gameField_y->setValue(100);
-    ui->gameField_width->setValue(200);
-    ui->gameField_height->setValue(200);
+    // Load JSON Data
+    loadSettingsJSON();
 
     // Set some default data
     currentPlayer = 0;
-    player.at(0) = { 0, 0, 100, 100, 200, 200, 100, 100, 100, 400, 100, 100 };
-    player.at(1) = { 500, 222, 100, 100, 700, 200, 100, 100, 500, 400, 100, 100 };
-
-    setDataToFields(1);
+    setDataToFields(0);
 }
 
 MainWindow::~MainWindow()
@@ -46,15 +43,96 @@ void MainWindow::setDataToFields(int p) {
 }
 
 void MainWindow::drawBoundingBoxes(cv::Mat &frame) {
-    cv::rectangle(frame,
-                  cv::Rect(
-                        ui->gameField_x->value(),
-                        ui->gameField_y->value(),
-                        ui->gameField_width->value(),
-                        ui->gameField_height->value()
-                  ),
-                  cv::Scalar(255, 0, 0),
-                  3);
+    for (int p = 0; p < 2; p++) {
+        cv::Scalar color { p == 0 ? cv::Scalar(255, 255, 0) : cv::Scalar(0, 255, 255) };
+        int thickness { 3 };
+
+        cv::rectangle(frame,
+                      cv::Rect(
+                          player.at(p).gameField_x,
+                          player.at(p).gameField_y,
+                          player.at(p).gameField_width,
+                          player.at(p).gameField_height
+                      ),
+                      color,
+                      thickness);
+        cv::rectangle(frame,
+                      cv::Rect(
+                          player.at(p).nextWindow_x,
+                          player.at(p).nextWindow_y,
+                          player.at(p).nextWindow_width,
+                          player.at(p).nextWindow_height
+                      ),
+                      color,
+                      thickness);
+        cv::rectangle(frame,
+                      cv::Rect(
+                          player.at(p).score_x,
+                          player.at(p).score_y,
+                          player.at(p).score_width,
+                          player.at(p).score_height
+                      ),
+                      color,
+                      thickness);
+    }
+}
+
+void MainWindow::loadSettingsJSON() {
+    std::ifstream stream("detectionsettings.json", std::ifstream::binary);
+    Json::Value json;
+    stream >> json;
+    for (int p = 0; p < 2; p++) {
+        std::cout << p;
+        player.at(p).gameField_x = json[p]["gameField_x"].asInt();
+        player.at(p).gameField_y = json[p]["gameField_y"].asInt();
+        player.at(p).gameField_width = json[p]["gameField_width"].asInt();
+        player.at(p).gameField_height = json[p]["gameField_height"].asInt();
+        player.at(p).nextWindow_x = json[p]["nextWindow_x"].asInt();
+        player.at(p).nextWindow_y = json[p]["nextWindow_y"].asInt();
+        player.at(p).nextWindow_width = json[p]["nextWindow_width"].asInt();
+        player.at(p).nextWindow_height = json[p]["nextWindow_height"].asInt();
+        player.at(p).score_x = json[p]["score_x"].asInt();
+        player.at(p).score_y = json[p]["score_y"].asInt();
+        player.at(p).score_width = json[p]["score_width"].asInt();
+        player.at(p).score_height = json[p]["score_height"].asInt();
+    }
+    stream.close();
+    return;
+}
+
+void MainWindow::saveSettingsJSON() {
+    Json::Value output(Json::arrayValue);
+    for (int p = 0; p < 2; p++) {
+        Json::Value data;
+        data["gameField_x"] = player.at(p).gameField_x;
+        data["gameField_y"] = player.at(p).gameField_y;
+        data["gameField_width"] = player.at(p).gameField_width;
+        data["gameField_height"] = player.at(p).gameField_height;
+        data["nextWindow_x"] = player.at(p).nextWindow_x;
+        data["nextWindow_y"] = player.at(p).nextWindow_y;
+        data["nextWindow_width"] = player.at(p).nextWindow_width;
+        data["nextWindow_height"] = player.at(p).nextWindow_height;
+        data["score_x"] = player.at(p).score_x;
+        data["score_y"] = player.at(p).score_y;
+        data["score_width"] = player.at(p).score_width;
+        data["score_height"] = player.at(p).score_height;
+        output.append(data);
+    }
+
+    //https://stackoverflow.com/questions/4289986/jsoncpp-writing-to-files
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "None";
+    builder["indentation"] = "    ";
+    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+    std::ofstream outputFileStream("detectionsettings.json");
+    writer->write(output, &outputFileStream);
+    return;
+}
+
+void MainWindow::on_saveSettings_clicked()
+{
+    saveSettingsJSON();
+    QMessageBox::information(this, "Saved JSON", "Saved data to detectionsettings.json");
 }
 
 void MainWindow::on_startPreview_clicked()
@@ -74,7 +152,8 @@ void MainWindow::on_startPreview_clicked()
     if(isCameraID) {
         // Use the cameraIndex to open the video feed,
         // and also record whether it was successful or not.
-        bool openSuccessful = video.open(cameraIndex, cv::CAP_DSHOW);
+//        bool openSuccessful = video.open(cameraIndex, cv::CAP_DSHOW);
+        bool openSuccessful = video.open(cameraIndex, cv::CAP_ANY);
         if (!openSuccessful) {
             QMessageBox::critical(this, "Capture Error", "Enter the correct index <br> or make sure the video capture isn't being used by another program.");
             return;
@@ -90,6 +169,7 @@ void MainWindow::on_startPreview_clicked()
     cv::Mat frame;
     while(video.isOpened()) {
         video >> frame;
+//        cv::resize(frame, frame, cv::Size(1920, 1080), 0, 0, cv::INTER_LINEAR);
         drawBoundingBoxes(frame);
         cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
         if (!frame.empty()) {
